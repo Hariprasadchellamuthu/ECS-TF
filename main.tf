@@ -2,8 +2,20 @@ provider "aws" {
   region = "ap-south-1"  # Replace with your AWS region
 }
 
+# Create a VPC as per our given CIDR block
+resource "aws_vpc" "my_vpc" {
+  cidr_block = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  tags = {
+    Name = "VPC_Pro2"
+  }
+}
+
+
 resource "aws_subnet" "ecs_subnet" {
-  vpc_id     = "vpc-04fab404a15b881ae"  # Replace with your VPC ID where you want to create the subnet
+  vpc_id     = aws_vpc.my_vpc.id  # Replace with your VPC ID where you want to create the subnet
   cidr_block = "10.0.1.0/24"  # Define the CIDR block for your new subnet
 
   # Add any additional configuration as needed for your subnet
