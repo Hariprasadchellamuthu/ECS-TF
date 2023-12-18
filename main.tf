@@ -2,6 +2,14 @@ provider "aws" {
   region = "ap-south-1"  # Replace with your AWS region
 }
 
+resource "aws_subnet" "ecs_subnet" {
+  vpc_id     = vpc-04fab404a15b881ae  # Replace with your VPC ID where you want to create the subnet
+  cidr_block = "10.0.1.0/24"  # Define the CIDR block for your new subnet
+
+  # Add any additional configuration as needed for your subnet
+  # For example, availability_zone, tags, etc.
+}
+
 resource "aws_security_group" "ecs_security_group" {
   name        = "ecs-security-group"
   description = "Security group for ECS tasks"
