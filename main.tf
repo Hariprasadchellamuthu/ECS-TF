@@ -3,7 +3,7 @@ provider "aws" {
 }
 
 resource "aws_subnet" "ecs_subnet" {
-  vpc_id     = vpc-04fab404a15b881ae  # Replace with your VPC ID where you want to create the subnet
+  vpc_id     = "vpc-04fab404a15b881ae"  # Replace with your VPC ID where you want to create the subnet
   cidr_block = "10.0.1.0/24"  # Define the CIDR block for your new subnet
 
   # Add any additional configuration as needed for your subnet
