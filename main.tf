@@ -185,9 +185,9 @@ resource "aws_ecs_service" "python_ecs_service" {
   task_definition = aws_ecs_task_definition.python_task_definition.arn
   launch_type     = "EC2"
 
-  network_configuration {
-    subnets = [aws_subnet.ecs_subnet.id]  # Replace with your subnet ID
-    security_groups = [aws_security_group.ecs_security_group.id]  # Reference the created security group
+ #network_configuration {
+    #subnets = [aws_subnet.ecs_subnet.id]  # Replace with your subnet ID
+    #security_groups = [aws_security_group.ecs_security_group.id]  # Reference the created security group
   }
   deployment_controller {
     type = "ECS"
