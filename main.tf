@@ -188,7 +188,7 @@ resource "aws_ecs_service" "python_ecs_service" {
  #network_configuration {
     #subnets = [aws_subnet.ecs_subnet.id]  # Replace with your subnet ID
     #security_groups = [aws_security_group.ecs_security_group.id]  # Reference the created security group
-  }
+  #}
   deployment_controller {
     type = "ECS"
   }
