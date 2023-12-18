@@ -48,9 +48,9 @@ pipeline {
             steps {
                 script {
                     dir('terraform') {
-                        if (params.action == 'Apply') {
+                        if (params.action == 'apply') {
                             sh 'terraform apply -input=false tfplan'
-                        } else if (params.action == 'Destroy') {
+                        } else if (params.action == 'destroy') {
                             sh 'terraform destroy -auto-approve'
                         } else {
                             error "Invalid action: ${params.action}. Please choose 'Apply' or 'Destroy'."
