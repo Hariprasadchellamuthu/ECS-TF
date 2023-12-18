@@ -58,7 +58,13 @@ resource "aws_iam_role" "ecs_execution_role" {
       }
     ]
   })
-  policy = jsonencode({ 
+}
+
+resource "aws_iam_role_policy" "ecs_execution_role_policy" {
+  name   = "ecs_execution_role_policy"
+  role   = aws_iam_role.ecs_execution_role.id
+
+  policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
@@ -74,7 +80,7 @@ resource "aws_iam_role" "ecs_execution_role" {
         Resource = "*",
       },
     ],
- })
+  })
 }
 
 resource "aws_iam_role" "ecs_task_role" {
@@ -90,6 +96,12 @@ resource "aws_iam_role" "ecs_task_role" {
       }
     ]
   })
+}
+
+resource "aws_iam_role_policy" "ecs_task_role_policy" {
+  name   = "ecs_task_role_policy"
+  role   = aws_iam_role.ecs_task_role.id
+
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -113,6 +125,7 @@ resource "aws_iam_role" "ecs_task_role" {
     ],
   })
 }
+
 
 resource "aws_ecs_cluster" "python_cluster" {
   name = "python-ecs-cluster"
