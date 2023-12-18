@@ -86,7 +86,7 @@ resource "aws_ecs_task_definition" "python_task_definition" {
         "/bin/bash",
         "-c",
         "sudo apt-get update",
-		"sudo apt-get install python3.6"# Replace with your Python script
+	"sudo apt-get install python3.6"# Replace with your Python script
       ]
     }
   ])
