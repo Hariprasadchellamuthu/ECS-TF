@@ -85,6 +85,24 @@ resource "aws_ecs_cluster" "python_cluster" {
   name = "python-ecs-cluster"
 }
 
+resource "aws_launch_configuration" "ecs_launch_configuration" {
+  name                 = "ecs-launch-config"
+  image_id             = "ami-0aee0743bf2e81172"  # Replace with your AMI ID
+  instance_type        = "t2.micro"  # Choose instance type as per your requirements
+
+  # Other configurations for the launch configuration as needed
+  # For instance, security_groups, key_name, user_data, etc.
+}
+
+resource "aws_autoscaling_group" "ecs_autoscaling_group" {
+  desired_capacity     = 1  # Number of instances to launch initially
+  max_size             = 3  # Maximum number of instances in the group
+  min_size             = 1  # Minimum number of instances in the group
+
+  launch_configuration = aws_launch_configuration.ecs_launch_configuration.id
+  vpc_zone_identifier  = [aws_subnet.ecs_subnet.id]  # Subnet IDs where instances will be launched
+}
+
 resource "aws_ecs_task_definition" "python_task_definition" {
   family                   = "python-task-family"
   network_mode             = "awsvpc"
@@ -121,6 +139,12 @@ resource "aws_ecs_service" "python_ecs_service" {
   network_configuration {
     subnets = [aws_subnet.ecs_subnet.id]  # Replace with your subnet ID
     security_groups = [aws_security_group.ecs_security_group.id]  # Reference the created security group
+  }
+  deployment_controller {
+    type = "ECS"
+  }
+  lifecycle {
+    create_before_destroy = true
   }
 
   depends_on = [aws_ecs_task_definition.python_task_definition]
