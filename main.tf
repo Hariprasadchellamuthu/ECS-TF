@@ -146,7 +146,7 @@ resource "aws_autoscaling_group" "ecs_autoscaling_group" {
   min_size             = 1  # Minimum number of instances in the group
 
   launch_configuration = aws_launch_configuration.ecs_launch_configuration.id
-  vpc_zone_identifier  = [aws_subnet.ecs_subnet.id]  # Subnet IDs where instances will be launched
+  #vpc_zone_identifier  = [aws_subnet.ecs_subnet.id]  # Subnet IDs where instances will be launched
 }
 
 resource "aws_ecs_task_definition" "python_task_definition" {
