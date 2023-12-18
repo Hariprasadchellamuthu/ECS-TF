@@ -88,7 +88,7 @@ resource "aws_ecs_cluster" "python_cluster" {
 resource "aws_ecs_task_definition" "python_task_definition" {
   family                   = "python-task-family"
   network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
+  requires_compatibilities = ["EC2"]  # Use EC2 launch type
 
   cpu    = "512"   # 0.5 vCPU
   memory = "1024"  # 1GB
@@ -116,7 +116,7 @@ resource "aws_ecs_service" "python_ecs_service" {
   name            = "python-ecs-service"
   cluster         = aws_ecs_cluster.python_cluster.id
   task_definition = aws_ecs_task_definition.python_task_definition.arn
-  launch_type     = "FARGATE"
+  launch_type     = "EC2"
 
   network_configuration {
     subnets = [aws_subnet.ecs_subnet.id]  # Replace with your subnet ID
