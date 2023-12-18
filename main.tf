@@ -106,8 +106,7 @@ resource "aws_ecs_task_definition" "python_task_definition" {
       command = [
         "/bin/bash",
         "-c",
-        "sudo apt-get update",
-	"sudo apt-get install python3.6"# Replace with your Python script
+        "yum update -y && yum install -y python3.6"# Replace with your Python script
       ]
     }
   ])
