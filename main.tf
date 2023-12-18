@@ -46,7 +46,7 @@ resource "aws_security_group" "ecs_security_group" {
 }
 
 resource "aws_iam_role" "ecs_execution_role" {
-  policy = jsonencode({
+  assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
@@ -65,7 +65,7 @@ resource "aws_iam_role" "ecs_execution_role" {
 }
 
 resource "aws_iam_role" "ecs_task_role" {
-  policy = jsonencode({
+  assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
