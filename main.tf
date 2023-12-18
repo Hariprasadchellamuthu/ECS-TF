@@ -107,7 +107,7 @@ resource "aws_ecs_service" "python_ecs_service" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets = ["subnet-0b9673721a5f76656"]  # Replace with your subnet ID
+    subnets = [aws_subnet.ecs_subnet.id]  # Replace with your subnet ID
     security_groups = [aws_security_group.ecs_security_group.id]  # Reference the created security group
   }
 
