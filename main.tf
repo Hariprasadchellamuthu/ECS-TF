@@ -138,7 +138,7 @@ resource "aws_launch_configuration" "ecs_launch_configuration" {
   associate_public_ip_address = true
   subnets = [aws_subnet.ecs_subnet.id]  # Replace with your subnet ID
   security_groups = [aws_security_group.ecs_security_group.id]  # Reference the created security group
-  }
+
 
   # Other configurations for the launch configuration as needed
   # For instance, security_groups, key_name, user_data, etc.
