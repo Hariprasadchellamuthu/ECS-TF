@@ -46,38 +46,44 @@ resource "aws_security_group" "ecs_security_group" {
 }
 
 resource "aws_iam_role" "ecs_execution_role" {
-
-  # Example policy for ECS execution role (modify as needed)
-  assume_role_policy = jsonencode({
+  policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
-        Action = "sts:AssumeRole",
-        Effect = "Allow",
-        Principal = {
-          Service = "ecs-tasks.amazonaws.com"
-        }
-      }
-    ]
+        Effect   = "Allow",
+        Action   = [
+          "ec2:CreateTags",
+          "ec2:RunInstances",
+          "ec2:StopInstances",
+          "ec2:StartInstances",
+          "ec2:TerminateInstances",
+        ],
+        Resource = "*",
+      },
+    ],
   })
 }
 
 resource "aws_iam_role" "ecs_task_role" {
-  # Define IAM role policies, permissions, etc. for ECS tasks
-  # ...
-
-  # Example policy for ECS task role (modify as needed)
-  assume_role_policy = jsonencode({
+  policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
-        Action = "sts:AssumeRole",
-        Effect = "Allow",
-        Principal = {
-          Service = "ecs-tasks.amazonaws.com"
-        }
-      }
-    ]
+        Effect   = "Allow",
+        Action   = [
+          "iam:PassRole",
+          "iam:CreateRole",
+          "iam:AttachRolePolicy",
+          "iam:PutRolePolicy",
+          "iam:DeleteRolePolicy",
+          "iam:DeleteRole",
+          "ec2:DescribeSecurityGroups",
+          "ec2:AuthorizeSecurityGroupIngress",
+          "ec2:RevokeSecurityGroupIngress",
+        ],
+        Resource = "*",
+      },
+    ],
   })
 }
 
