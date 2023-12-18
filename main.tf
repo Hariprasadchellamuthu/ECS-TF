@@ -134,7 +134,7 @@ resource "aws_ecs_cluster" "python_cluster" {
 resource "aws_launch_configuration" "ecs_launch_configuration" {
   name                 = "ecs-launch-config"
   image_id             = "ami-0aee0743bf2e81172"  # Replace with your AMI ID
-  instance_type        = "t2.micro"  # Choose instance type as per your requirements
+  instance_type        = "t2.small"  # Choose instance type as per your requirements
 
   # Other configurations for the launch configuration as needed
   # For instance, security_groups, key_name, user_data, etc.
