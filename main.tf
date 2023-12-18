@@ -25,6 +25,7 @@ resource "aws_subnet" "ecs_subnet" {
 resource "aws_security_group" "ecs_security_group" {
   name        = "ecs-security-group"
   description = "Security group for ECS tasks"
+  vpc_id      = aws_vpc.my_vpc.id  # Associate the security group with the VPC
   
   # Define your security group rules here
   # Example inbound rules (modify as needed)
