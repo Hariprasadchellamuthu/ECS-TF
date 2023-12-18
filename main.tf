@@ -152,7 +152,7 @@ resource "aws_autoscaling_group" "ecs_autoscaling_group" {
 
 resource "aws_ecs_task_definition" "python_task_definition" {
   family                   = "python-task-family"
-  network_mode             = "awsvpc"
+  network_mode             = "bridge"
   requires_compatibilities = ["EC2"]  # Use EC2 launch type
 
   cpu    = "512"   # 0.5 vCPU
