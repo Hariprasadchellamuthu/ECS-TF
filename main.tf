@@ -198,6 +198,36 @@ resource "aws_autoscaling_group" "jenkins_autoscaling_group" {
   
 }
 
+resource "aws_ecs_capacity_provider" "my_capacity_provider" {
+  name = "my-capacity-provider"
+  auto_scaling_group_provider {
+    auto_scaling_group_arn         = aws_autoscaling_group.jenkins_autoscaling_group.arn
+    managed_termination_protection = "ENABLED"
+    managed_scaling {
+      maximum_scaling_step_size = 1000
+      minimum_scaling_step_size = 1
+      status                    = "ENABLED"
+      target_capacity           = 100
+    }
+  }
+}
+
+resource "aws_ecs_container_instance" "my_container_instance" {
+  instance_type    = "t2.micro"  # Change this to your instance type
+  cluster          = aws_ecs_cluster.jenkins_cluster.id
+  capacity_provider_strategy {
+    capacity_provider = aws_ecs_capacity_provider.my_capacity_provider.name
+  }
+  launch_template {
+    id = aws_launch_configuration.jenkins_launch_configuration.id
+    version = "$Latest"
+  }
+  network_configuration {
+    subnets          = [aws_subnet.subnet_b.id]
+    security_groups  = [aws_security_group.ecs_security_group.id]
+  }
+}
+
 resource "aws_ecs_task_definition" "jenkins_task_definition" {
   family                   = "jenkins-task-family"
   network_mode             = "awsvpc"
