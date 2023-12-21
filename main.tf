@@ -200,7 +200,7 @@ resource "aws_autoscaling_group" "jenkins_autoscaling_group" {
 
 resource "aws_ecs_task_definition" "jenkins_task_definition" {
   family                   = "jenkins-task-family"
-  network_mode             = "bridge"
+  network_mode             = "default"
   requires_compatibilities = ["EC2"]
 
   cpu    = "512"
