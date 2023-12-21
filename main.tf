@@ -1,8 +1,8 @@
 provider "aws" {
-  region = "ap-south-1"  # Replace with your AWS region
+  region = "ap-south-1"  
 }
 
-# Create a VPC as per our given CIDR block
+# Create VPC and Subnets 
 resource "aws_vpc" "my_vpc" {
   cidr_block = "10.0.0.0/16"
   enable_dns_support   = true
@@ -13,35 +13,76 @@ resource "aws_vpc" "my_vpc" {
   }
 }
 
-
-resource "aws_subnet" "ecs_subnet" {
-  vpc_id     = aws_vpc.my_vpc.id  # Replace with your VPC ID where you want to create the subnet
-  cidr_block = "10.0.1.0/24"  # Define the CIDR block for your new subnet
-
-  # Add any additional configuration as needed for your subnet
-  # For example, availability_zone, tags, etc.
+resource "aws_subnet" "subnet_a" {
+  vpc_id     = aws_vpc.my_vpc.id
+  cidr_block = "10.0.1.0/24"
+  availability_zone = "ap-south-1a"
 }
 
+resource "aws_subnet" "subnet_b" {
+  vpc_id     = aws_vpc.my_vpc.id
+  cidr_block = "10.0.2.0/24"
+  availability_zone = "ap-south-1b"
+}
+
+# Create Internet Gateway
+resource "aws_internet_gateway" "my_igw" {
+  vpc_id = aws_vpc.my_vpc.id
+}
+
+# Create Route Table
+resource "aws_route_table" "my_route_table" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.my_igw.id
+  }
+}
+
+# Associate Route Table with Subnets
+resource "aws_route_table_association" "subnet_a_association" {
+  subnet_id      = aws_subnet.subnet_a.id
+  route_table_id = aws_route_table.my_route_table.id
+}
+
+resource "aws_route_table_association" "subnet_b_association" {
+  subnet_id      = aws_subnet.subnet_b.id
+  route_table_id = aws_route_table.my_route_table.id
+}
+
+# Security Group 
 resource "aws_security_group" "ecs_security_group" {
   name        = "ecs-security-group"
   description = "Security group for ECS tasks"
-  vpc_id      = aws_vpc.my_vpc.id  # Associate the security group with the VPC
+  vpc_id      = aws_vpc.my_vpc.id
+
   
-  # Define your security group rules here
-  # Example inbound rules (modify as needed)
   ingress {
     from_port   = 8080
     to_port     = 8080
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # Adjust CIDR block for your network
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Example outbound rules (modify as needed)
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]  # Adjust CIDR block for your network
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 
@@ -125,76 +166,84 @@ resource "aws_iam_role_policy" "ecs_task_role_policy" {
     ],
   })
 }
-
-
-resource "aws_ecs_cluster" "python_cluster" {
-  name = "python-ecs-cluster"
+# ECS Cluster 2 with Jenkins Application
+resource "aws_ecs_cluster" "jenkins_cluster" {
+  name = "jenkins-ecs-cluster"
 }
 
-resource "aws_launch_configuration" "ecs_launch_configuration" {
-  name                 = "ecs-launch-config"
-  image_id             = "ami-0aee0743bf2e81172"  # Replace with your AMI ID
-  instance_type        = "t2.small"  # Choose instance type as per your requirements
+resource "aws_launch_configuration" "jenkins_launch_configuration" {
+  name                 = "jenkins-launch-config"
+  image_id             = "ami-0aee0743bf2e81172"
+  instance_type        = "t2.micro"  
+  security_groups      = [aws_security_group.ecs_security_group.id]
+  user_data = <<-EOF
+    #!/bin/bash
+    echo ECS_CLUSTER=jenkins_cluster >> /etc/ecs/ecs.config
+    yum install -y ecs-init
+    start ecs
+  EOF
   associate_public_ip_address = true
-  security_groups = [aws_security_group.ecs_security_group.id]  # Reference the created security group
-
-
-  # Other configurations for the launch configuration as needed
-  # For instance, security_groups, key_name, user_data, etc.
 }
 
-resource "aws_autoscaling_group" "ecs_autoscaling_group" {
-  desired_capacity     = 1  # Number of instances to launch initially
-  max_size             = 3  # Maximum number of instances in the group
-  min_size             = 1  # Minimum number of instances in the group
+resource "aws_autoscaling_group" "jenkins_autoscaling_group" {
+  desired_capacity     = 1
+  max_size             = 3
+  min_size             = 1
+  health_check_grace_period = 300
+  health_check_type         = "EC2"
 
-  launch_configuration = aws_launch_configuration.ecs_launch_configuration.id
-  vpc_zone_identifier  = [aws_subnet.ecs_subnet.id]  # Subnet IDs where instances will be launched
+  launch_configuration = aws_launch_configuration.jenkins_launch_configuration.name
+  vpc_zone_identifier  = [aws_subnet.subnet_b.id]
+
+  
 }
 
-resource "aws_ecs_task_definition" "python_task_definition" {
-  family                   = "python-task-family"
-  network_mode             = "bridge"
-  requires_compatibilities = ["EC2"]  # Use EC2 launch type
+resource "aws_ecs_task_definition" "jenkins_task_definition" {
+  family                   = "jenkins-task-family"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["EC2"]
 
-  cpu    = "512"   # 0.5 vCPU
-  memory = "1024"  # 1GB
+  cpu    = "512"
+  memory = "1024"
 
   execution_role_arn = aws_iam_role.ecs_execution_role.arn
   task_role_arn      = aws_iam_role.ecs_task_role.arn
 
   container_definitions = jsonencode([
     {
-      name  = "python-container"
-      image = "amazonlinux:latest"
+      name  = "jenkins-container"
+      image = "jenkins/jenkins:lts"
       cpu   = 512
       memory = 1024
       essential = true
-      command = [
-        "/bin/bash",
-        "-c",
-        "yum update -y && yum install -y python3.6"# Replace with your Python script
+      portMappings = [
+        {
+          containerPort = 8080,
+          hostPort      = 8080
+        },
       ]
     }
   ])
 }
 
-resource "aws_ecs_service" "python_ecs_service" {
-  name            = "python-ecs-service"
-  cluster         = aws_ecs_cluster.python_cluster.id
-  task_definition = aws_ecs_task_definition.python_task_definition.arn
+resource "aws_ecs_service" "jenkins_ecs_service" {
+  name            = "jenkins-ecs-service"
+  cluster         = aws_ecs_cluster.jenkins_cluster.id
+  task_definition = aws_ecs_task_definition.jenkins_task_definition.arn
   launch_type     = "EC2"
 
- #network_configuration {
-    #subnets = [aws_subnet.ecs_subnet.id]  # Replace with your subnet ID
-    #security_groups = [aws_security_group.ecs_security_group.id]  # Reference the created security group
-  #}
+  network_configuration {
+    subnets = [aws_subnet.subnet_b.id]
+    security_groups = [aws_security_group.ecs_security_group.id]
+  }
+
   deployment_controller {
     type = "ECS"
   }
+
   lifecycle {
     create_before_destroy = true
   }
 
-  depends_on = [aws_ecs_task_definition.python_task_definition]
+  depends_on = [aws_ecs_task_definition.jenkins_task_definition]
 }
