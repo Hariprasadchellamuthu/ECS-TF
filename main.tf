@@ -235,6 +235,7 @@ resource "aws_ecs_service" "jenkins_ecs_service" {
   network_configuration {
     subnets = [aws_subnet.subnet_b.id]
     security_groups = [aws_security_group.ecs_security_group.id]
+    assign_public_ip = true
   }
 
   deployment_controller {
