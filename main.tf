@@ -247,7 +247,7 @@ resource "aws_ecs_service" "jenkins_ecs_service" {
   name            = "jenkins-ecs-service"
   cluster         = aws_ecs_cluster.jenkins_cluster.id
   task_definition = aws_ecs_task_definition.jenkins_task_definition.arn
-  launch_type     = "EC2"
+
 
   deployment_controller {
     type = "ECS"
