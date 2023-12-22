@@ -180,6 +180,35 @@ resource "aws_autoscaling_group" "jenkins_autoscaling_group" {
   force_delete               = true
 }
 
+#ECS capacity provider
+
+resource "aws_ecs_capacity_provider" "ecs_capacity_provider" {
+  name = "test1"
+
+  auto_scaling_group_provider {
+    auto_scaling_group_arn = aws_autoscaling_group.ecs_asg.arn
+
+    managed_scaling {
+      maximum_scaling_step_size = 1000
+      minimum_scaling_step_size = 1
+      status                    = "ENABLED"
+      target_capacity           = 3
+    }
+  }
+}
+
+resource "aws_ecs_cluster_capacity_providers" "example1" {
+ cluster_name = aws_ecs_cluster.jenkins_cluster    .name
+
+ capacity_providers = [aws_ecs_capacity_provider.ecs_capacity_provider.name]
+
+ default_capacity_provider_strategy {
+   base              = 1
+   weight            = 100
+   capacity_provider = aws_ecs_capacity_provider.ecs_capacity_provider.name
+ }
+}
+
 # ECS Task Definition for Jenkins
 resource "aws_ecs_task_definition" "jenkins_task_definition" {
   family                   = "jenkins-task-family"
@@ -188,6 +217,10 @@ resource "aws_ecs_task_definition" "jenkins_task_definition" {
 
   cpu    = "512"
   memory = "1024"
+  runtime_platform {
+   operating_system_family = "LINUX"
+   cpu_architecture        = "X86_64"
+ }
 
   execution_role_arn = aws_iam_role.ecs_execution_role.arn
   task_role_arn      = aws_iam_role.ecs_task_role.arn
@@ -219,6 +252,11 @@ resource "aws_ecs_service" "jenkins_ecs_service" {
   deployment_controller {
     type = "ECS"
   }
+
+  capacity_provider_strategy {
+   capacity_provider = aws_ecs_capacity_provider.ecs_capacity_provider.name
+   weight            = 100
+ }
 
   lifecycle {
     create_before_destroy = true
