@@ -178,7 +178,6 @@ resource "aws_autoscaling_group" "jenkins_autoscaling_group" {
   health_check_type          = "EC2"
   health_check_grace_period  = 300
   force_delete               = true
-  health_check_type         = "EC2"
 }
 
 # ECS Task Definition for Jenkins
