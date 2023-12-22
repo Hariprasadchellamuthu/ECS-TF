@@ -117,6 +117,33 @@ resource "aws_iam_role_policy" "ecs_task_role_policy" {
   })
 }
 
+data "aws_iam_policy_document" "ecs_agent" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "ecs_agent" {
+  name               = "ecs-agent"
+  assume_role_policy = data.aws_iam_policy_document.ecs_agent.json
+}
+
+
+resource "aws_iam_role_policy_attachment" "ecs_agent" {
+  role       = "aws_iam_role.ecs_agent.name"
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
+}
+
+resource "aws_iam_instance_profile" "ecs_agent" {
+  name = "ecs-agent"
+  role = aws_iam_role.ecs_agent.name
+}
+
 resource "aws_ecs_cluster" "jenkins_cluster" {
   name = "jenkins-ecs-cluster"
 }
@@ -124,6 +151,7 @@ resource "aws_ecs_cluster" "jenkins_cluster" {
 resource "aws_launch_configuration" "jenkins_launch_configuration" {
   name                 = "jenkins-launch-config"
   image_id             = "ami-0aee0743bf2e81172" # Replace with your desired Jenkins-compatible AMI
+  iam_instance_profile = aws_iam_instance_profile.ecs_agent.name
   instance_type        = "t2.micro" # Replace with your desired instance type
   security_groups      = [aws_security_group.ecs_security_group.id]
   associate_public_ip_address = true
@@ -143,12 +171,14 @@ resource "aws_autoscaling_group" "jenkins_autoscaling_group" {
   max_size             = 3
   min_size             = 1
 
+  name = "asg"
   launch_configuration = aws_launch_configuration.jenkins_launch_configuration.id
   vpc_zone_identifier  = var.vpc_zone_identifier # Replace with your subnet ID
 
   health_check_type          = "EC2"
   health_check_grace_period  = 300
   force_delete               = true
+  health_check_type         = "EC2"
 }
 
 # ECS Task Definition for Jenkins
