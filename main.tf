@@ -188,7 +188,7 @@ resource "aws_ecs_service" "jenkins_ecs_service" {
   launch_type     = "EC2"
 
   network_configuration {
-    subnets         = [aws_subnet.subnet_a.id]
+    subnets         = "subnet-09153db740467e15a"
     security_groups = [aws_security_group.ecs_security_group.id]
   }
 
