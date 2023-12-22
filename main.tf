@@ -51,8 +51,8 @@ resource "aws_launch_configuration" "jenkins_launch_configuration" {
               echo ECS_CLUSTER=${aws_ecs_cluster.jenkins_cluster.name} >> /etc/ecs/ecs.config
               yum update -y
               yum install -y docker
-              service docker start
-              docker run -p 8080:8080 -p 50000:50000 jenkins/jenkins:lts
+              systemctl start docker
+              systemctl enable docker
               EOF
 }
 
@@ -63,4 +63,62 @@ resource "aws_autoscaling_group" "jenkins_autoscaling_group" {
 
   launch_configuration = aws_launch_configuration.jenkins_launch_configuration.id
   vpc_zone_identifier  = var.vpc_zone_identifier # Replace with your subnet ID
+
+  health_check_type          = "EC2"
+  health_check_grace_period  = 300
+  force_delete               = true
 }
+
+# ECS Task Definition for Jenkins
+resource "aws_ecs_task_definition" "jenkins_task_definition" {
+  family                   = "jenkins-task-family"
+  network_mode             = "bridge"
+  requires_compatibilities = ["EC2"]
+
+  cpu    = "512"
+  memory = "1024"
+
+  execution_role_arn = aws_iam_role.ecs_execution_role.arn
+  task_role_arn      = aws_iam_role.ecs_task_role.arn
+
+  container_definitions = jsonencode([
+    {
+      name  = "jenkins-container"
+      image = "jenkins/jenkins:lts"
+      cpu   = 512
+      memory = 1024
+      essential = true
+      portMappings = [
+        {
+          containerPort = 8080,
+          hostPort      = 8080
+        },
+      ]
+    }
+  ])
+}
+
+# ECS Service for Jenkins
+resource "aws_ecs_service" "jenkins_ecs_service" {
+  name            = "jenkins-ecs-service"
+  cluster         = aws_ecs_cluster.jenkins_cluster.id
+  task_definition = aws_ecs_task_definition.jenkins_task_definition.arn
+  launch_type     = "EC2"
+
+  network_configuration {
+    subnets         = [aws_subnet.subnet_a.id]
+    security_groups = [aws_security_group.ecs_security_group.id]
+  }
+
+  deployment_controller {
+    type = "ECS"
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  depends_on = [aws_ecs_task_definition.jenkins_task_definition]
+}
+
+
