@@ -187,11 +187,6 @@ resource "aws_ecs_service" "jenkins_ecs_service" {
   task_definition = aws_ecs_task_definition.jenkins_task_definition.arn
   launch_type     = "EC2"
 
-  network_configuration {
-    subnets         = ["subnet-09153db740467e15a"]
-    security_groups = [aws_security_group.ecs_security_group.id]
-  }
-
   deployment_controller {
     type = "ECS"
   }
