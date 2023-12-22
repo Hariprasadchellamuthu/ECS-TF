@@ -186,7 +186,7 @@ resource "aws_ecs_capacity_provider" "ecs_capacity_provider" {
   name = "test1"
 
   auto_scaling_group_provider {
-    auto_scaling_group_arn = aws_autoscaling_group.ecs_asg.arn
+    auto_scaling_group_arn = aws_autoscaling_group.jenkins_autoscaling_group.arn
 
     managed_scaling {
       maximum_scaling_step_size = 1000
