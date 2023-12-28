@@ -153,7 +153,7 @@ resource "aws_ecs_cluster" "jenkins_cluster" {
 #ECS capacity provider
 
 resource "aws_ecs_cluster_capacity_providers" "ecs_capacity_provider" {
-  cluster_name = aws_ecs_cluster.jenkins_cluster
+  cluster_name = aws_ecs_cluster.jenkins_cluster.name
 
   capacity_providers = ["FARGATE"]
 
