@@ -191,6 +191,11 @@ resource "aws_ecs_task_definition" "jenkins_task_definition" {
       ]
     }
   ])
+  network_configuration {
+    subnets          = var.vpc_zone_identifier
+    security_groups  = [aws_security_group.ecs_security_group.id]
+    assign_public_ip = "ENABLED" # Or "DISABLED" based on your requirements
+  }
 }
 
 # ECS Service for Jenkins
