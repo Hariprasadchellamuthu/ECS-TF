@@ -199,6 +199,7 @@ resource "aws_ecs_service" "jenkins_ecs_service" {
   name            = "jenkins-ecs-service"
   cluster         = aws_ecs_cluster.jenkins_cluster.id
   task_definition = aws_ecs_task_definition.jenkins_task_definition.arn
+  launch_type     = "FARGATE"
 
 
   network_configuration {
@@ -210,10 +211,7 @@ resource "aws_ecs_service" "jenkins_ecs_service" {
     type = "ECS"
   }
 
-  capacity_provider_strategy {
-    capacity_provider = "FARGATE"
-    weight            = 1 # Set a weight value greater than zero
-  }
+
   lifecycle {
     create_before_destroy = true
   }
