@@ -203,6 +203,10 @@ resource "aws_ecs_service" "jenkins_ecs_service" {
     type = "ECS"
   }
 
+  capacity_provider_strategy {
+    capacity_provider = "FARGATE"
+    weight            = 1 # Set a weight value greater than zero
+  }
   lifecycle {
     create_before_destroy = true
   }
