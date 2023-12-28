@@ -191,11 +191,7 @@ resource "aws_ecs_task_definition" "jenkins_task_definition" {
       ]
     }
   ])
-  network_configuration {
-    subnets          = var.vpc_zone_identifier
-    security_groups  = [aws_security_group.ecs_security_group.id]
-    assign_public_ip = "ENABLED" # Or "DISABLED" based on your requirements
-  }
+
 }
 
 # ECS Service for Jenkins
@@ -203,7 +199,13 @@ resource "aws_ecs_service" "jenkins_ecs_service" {
   name            = "jenkins-ecs-service"
   cluster         = aws_ecs_cluster.jenkins_cluster.id
   task_definition = aws_ecs_task_definition.jenkins_task_definition.arn
+  launch_type     = "FARGATE"
 
+  network_configuration {
+    subnets          = var.vpc_zone_identifier
+    security_groups  = [aws_security_group.ecs_security_group.id]
+    assign_public_ip = "ENABLED" # Or "DISABLED" based on your requirements
+  }
   deployment_controller {
     type = "ECS"
   }
