@@ -1,4 +1,4 @@
-provider "aws" {
+  provider "aws" {
   region = "ap-south-1"
 }
 
@@ -155,10 +155,13 @@ resource "aws_ecs_cluster" "jenkins_cluster" {
 resource "aws_ecs_cluster_capacity_providers" "ecs_capacity_provider" {
   cluster_name = aws_ecs_cluster.jenkins_cluster.name
 
-  capacity_providers = ["FARGATE"]
+  capacity_providers = ["FARGATE", "FARGATE_SPOT"]
 
   default_capacity_provider_strategy {
     capacity_provider = "FARGATE"
+  }
+  default_capacity_provider_strategy {
+    capacity_provider = "FARGATE_SPOT"
   }
 }
 
