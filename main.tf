@@ -204,7 +204,7 @@ resource "aws_ecs_service" "jenkins_ecs_service" {
   network_configuration {
     subnets          = var.vpc_zone_identifier
     security_groups  = [aws_security_group.ecs_security_group.id]
-    assign_public_ip = "ENABLED" # Or "DISABLED" based on your requirements
+    assign_public_ip = true
   }
   deployment_controller {
     type = "ECS"
