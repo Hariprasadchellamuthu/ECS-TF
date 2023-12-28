@@ -179,7 +179,6 @@ resource "aws_ecs_task_definition" "jenkins_task_definition" {
   family                   = "jenkins-task-family"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
- }
 
   execution_role_arn = aws_iam_role.ecs_execution_role.arn
   task_role_arn      = aws_iam_role.ecs_task_role.arn
@@ -207,11 +206,9 @@ resource "aws_ecs_service" "jenkins_ecs_service" {
   cluster         = aws_ecs_cluster.jenkins_cluster.id
   task_definition = aws_ecs_task_definition.jenkins_task_definition.arn
 
-
   deployment_controller {
     type = "ECS"
   }
-
 
   lifecycle {
     create_before_destroy = true
@@ -219,5 +216,4 @@ resource "aws_ecs_service" "jenkins_ecs_service" {
 
   depends_on = [aws_ecs_task_definition.jenkins_task_definition]
 }
-
 
