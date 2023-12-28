@@ -148,52 +148,17 @@ resource "aws_ecs_cluster" "jenkins_cluster" {
   name = "jenkins-ecs-cluster"
 }
 
-resource "aws_launch_configuration" "jenkins_launch_configuration" {
-  name                 = "jenkins-launch-config"
-  image_id             = "ami-0aee0743bf2e81172" # Replace with your desired Jenkins-compatible AMI
-  iam_instance_profile = aws_iam_instance_profile.ecs_agent.name
-  instance_type        = "t2.micro" # Replace with your desired instance type
-  security_groups      = [aws_security_group.ecs_security_group.id]
-  associate_public_ip_address = true
 
-  user_data = <<-EOF
-              #!/bin/bash
-              echo ECS_CLUSTER=${aws_ecs_cluster.jenkins_cluster.name} >> /etc/ecs/ecs.config
-              yum update -y
-              yum install -y docker
-              systemctl start docker
-              systemctl enable docker
-              EOF
-}
-
-resource "aws_autoscaling_group" "jenkins_autoscaling_group" {
-  desired_capacity     = 1
-  max_size             = 3
-  min_size             = 1
-
-  name = "asg"
-  launch_configuration = aws_launch_configuration.jenkins_launch_configuration.id
-  vpc_zone_identifier  = var.vpc_zone_identifier # Replace with your subnet ID
-
-  health_check_type          = "EC2"
-  health_check_grace_period  = 300
-  force_delete               = true
-}
 
 #ECS capacity provider
 
-resource "aws_ecs_capacity_provider" "ecs_capacity_provider" {
-  name = "test1"
+resource "aws_ecs_cluster_capacity_provider" "ecs_capacity_provider" {
+  cluster_name = aws_ecs_cluster.jenkins_cluster
 
-  auto_scaling_group_provider {
-    auto_scaling_group_arn = aws_autoscaling_group.jenkins_autoscaling_group.arn
+  capacity_provider = ["FARGATE"]
 
-    managed_scaling {
-      maximum_scaling_step_size = 1000
-      minimum_scaling_step_size = 1
-      status                    = "ENABLED"
-      target_capacity           = 3
-    }
+  default_capacity_provider_strategy {
+    capcity_provider = "FARGATE"
   }
 }
 
@@ -212,14 +177,8 @@ resource "aws_ecs_cluster_capacity_providers" "example1" {
 # ECS Task Definition for Jenkins
 resource "aws_ecs_task_definition" "jenkins_task_definition" {
   family                   = "jenkins-task-family"
-  network_mode             = "bridge"
-  requires_compatibilities = ["EC2"]
-
-  cpu    = "512"
-  memory = "1024"
-  runtime_platform {
-   operating_system_family = "LINUX"
-   cpu_architecture        = "X86_64"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
  }
 
   execution_role_arn = aws_iam_role.ecs_execution_role.arn
@@ -253,10 +212,6 @@ resource "aws_ecs_service" "jenkins_ecs_service" {
     type = "ECS"
   }
 
-  capacity_provider_strategy {
-   capacity_provider = aws_ecs_capacity_provider.ecs_capacity_provider.name
-   weight            = 100
- }
 
   lifecycle {
     create_before_destroy = true
