@@ -155,7 +155,7 @@ resource "aws_ecs_cluster" "jenkins_cluster" {
 resource "aws_ecs_cluster_capacity_providers" "ecs_capacity_provider" {
   cluster_name = aws_ecs_cluster.jenkins_cluster
 
-  capacity_provider = ["FARGATE"]
+  capacity_providers = ["FARGATE"]
 
   default_capacity_provider_strategy {
     capacity_provider = "FARGATE"
