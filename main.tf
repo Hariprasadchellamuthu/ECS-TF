@@ -1,3 +1,13 @@
+terraform {
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "5.31.0"
+    }
+  }
+}
+
 provider "aws" {
   region = "ap-south-1"
 }
@@ -134,21 +144,7 @@ data "aws_iam_policy_document" "ecs_agent" {
   }
 }
 
-resource "aws_iam_role" "ecs_agent" {
-  name               = "ecs-agent"
-  assume_role_policy = data.aws_iam_policy_document.ecs_agent.json
-}
 
-
-resource "aws_iam_role_policy_attachment" "ecs_agent" {
-  role       = aws_iam_role.ecs_agent.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role"
-}
-
-resource "aws_iam_instance_profile" "ecs_agent" {
-  name = "ecs-agent"
-  role = aws_iam_role.ecs_agent.name
-}
 
 resource "aws_ecs_cluster" "jenkins_cluster" {
   name = "jenkins-ecs-cluster"
@@ -197,11 +193,11 @@ resource "aws_ecs_task_definition" "jenkins_task_definition" {
           containerPort = 8080,
           hostPort      = 8080
         },
-      ],
-      log_configuration = {
+      ],      
+      logConfiguration = {
         logDriver = "awslogs",
         options = {
-          "awslogs-create-group"  = true,
+          "awslogs-create-group"  = "true",
           "awslogs-group"         = "/ecs/my-log-group",
           "awslogs-region"        = "ap-south-1",
           "awslogs-stream-prefix" = "ecs",
@@ -209,6 +205,7 @@ resource "aws_ecs_task_definition" "jenkins_task_definition" {
       }
     }
   ])
+
 
 }
 
@@ -235,6 +232,11 @@ resource "aws_ecs_service" "jenkins_ecs_service" {
   lifecycle {
     create_before_destroy = true
   }
+  
 
   depends_on = [aws_ecs_task_definition.jenkins_task_definition]
 }
+
+output "public_ip" {
+    value = aws_ecs_service.jenkins_ecs_service.task_definition
+  }
